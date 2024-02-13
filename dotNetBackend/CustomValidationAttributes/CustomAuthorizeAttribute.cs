@@ -11,7 +11,7 @@ namespace dotNetBackend.CustomValidationAttributes
 {
     public class CustomAuthorizeAttribute : AuthorizeAttribute, IAsyncAuthorizationFilter
     {
-        public Role? UserRole {  get; set; }
+        public string? UserRole { set; get; }
 
         public CustomAuthorizeAttribute()
         { }   
@@ -25,10 +25,11 @@ namespace dotNetBackend.CustomValidationAttributes
         private void CheckRoles(AuthorizationFilterContext context)
         {
             if (UserRole == null) return;
+            Role userRole = UserRole.ToRole();
 
             // User < Student < Teacher < deam < admin
             List<Role> roles = GetRolesFromToken(context.HttpContext);
-            if(roles.Where(role => (int)role >= (int)UserRole).ToList().IsNullOrEmpty())
+            if(roles.Where(role => (int)role >= (int)userRole).ToList().IsNullOrEmpty())
             {
                 Forbid(context, "JWTToken", "Error: bad role!");
                 return;

@@ -1,4 +1,6 @@
-﻿using dotNetBackend.models.DTO;
+﻿using dotNetBackend.CustomValidationAttributes;
+using dotNetBackend.models.DTO;
+using dotNetBackend.models.Enums;
 using dotNetBackend.Servises;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,6 +18,7 @@ namespace dotNetBackend.Controllers
         }
 
         [HttpGet("users")]
+        [CustomAuthorize(UserRole = "ADMIN")]
         public List<RequestDTO> GetUsersRequests([FromQuery] Guid userId)
         {
             return _requestService.GetUsersRequests(userId);
