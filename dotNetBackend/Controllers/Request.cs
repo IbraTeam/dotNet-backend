@@ -16,9 +16,9 @@ namespace dotNetBackend.Controllers
         }
 
         [HttpGet("users")]
-        public List<UserDTO> GetListUsers()
+        public List<RequestDTO> GetUsersRequests([FromQuery] Guid userId)
         {
-            return _requestService.GetUsers();
+            return _requestService.GetUsersRequests(userId);
         }
 
         [HttpPost("create")]
@@ -53,15 +53,3 @@ namespace dotNetBackend.Controllers
     }
 }
 
-/*
-    1. Получение списка заявок пользователя на забронированные аудитории - /api/request/users
-    2. Создание заявки - /api/request/create
-    3. Получение всех заявок с фильтрацией и пагинацией(для деканата): /api/request 
-    4. Отмена заявки: /api/request/:requestId  (delete)
-
-    5. Подтверждение/отклонение заявки (для деканата): /api/request/:requestId (post)
-
-    6. Получение бронирований аудитории (передаем id аудитории) /api/request/:audienceId
-
-    //    Получение расписания (подтвержденные заявки) - /api/request/approved
- */

@@ -2,47 +2,48 @@
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc;
 using dotNetBackend.models.DbFirst;
+using Microsoft.Extensions.Caching.Distributed;
+using dotNetBackend.models.Enums;
+using System.Linq;
+using Microsoft.IdentityModel.Tokens;
 
 namespace dotNetBackend.CustomValidationAttributes
 {
     public class CustomAuthorizeAttribute : AuthorizeAttribute, IAsyncAuthorizationFilter
     {
+        public Role? UserRole {  get; set; }
+
         public CustomAuthorizeAttribute()
         { }   
 
         public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
         {
             await CheckTokenJTI(context);
-            CheckTokenUserId(context);
+            CheckRoles(context);
+        }
+
+        private void CheckRoles(AuthorizationFilterContext context)
+        {
+            if (UserRole == null) return;
+
+            // User < Student < Teacher < deam < admin
+            List<Role> roles = GetRolesFromToken(context.HttpContext);
+            if(roles.Where(role => (int)role >= (int)UserRole).ToList().IsNullOrEmpty())
+            {
+                Forbid(context, "JWTToken", "Error: bad role!");
+                return;
+            }
         }
 
         private async Task CheckTokenJTI(AuthorizationFilterContext context)
         {
+            var redisContext = context.HttpContext.RequestServices.GetService<IDistributedCache>();
+
             var JTI = GetJTIFromToken(context.HttpContext);
-            var userId = GetUserIdFromToken(context.HttpContext);
-
-            var dbContext = context.HttpContext.RequestServices.GetService<NewContext>();
-            //var accessToken = await dbContext.RefreshTokens.FirstOrDefaultAsync(refreshToken => refreshToken.AccessTokenJTI == JTI && refreshToken.UserId == userId);
-            //if (accessToken == null)
-            //{
-            //    Forbid(context, "JWTToken", "Error: this token is no longer available!");
-            //    return;
-            //}
-        }
-
-        private void CheckTokenUserId(AuthorizationFilterContext context)
-        {
-            var userGuidStr = GetUserIdFromToken(context.HttpContext).ToString();
-
-            if (userGuidStr == null)
+            var accessToken = await redisContext.GetStringAsync(JTI.ToString());
+            if (accessToken == null)
             {
-                Forbid(context, "JWTToken", "Error: a token without a UserId.");
-                return;
-            }
-
-            if (!Guid.TryParse(userGuidStr, out Guid userGuid))
-            {
-                Forbid(context, "JWTToken", "Error: a token contain an uncorrected userId");
+                Forbid(context, "JWTToken", "Error: this token is no longer available!");
                 return;
             }
         }
@@ -60,18 +61,12 @@ namespace dotNetBackend.CustomValidationAttributes
             return Guid.Parse(userGuidStr.Value);
         }
 
-        public static Guid GetUserIdFromToken(HttpContext httpContext)
+        public static List<Role> GetRolesFromToken(HttpContext httpContext)
         {
-            var userGuidStr = httpContext.User.Claims.First(claim => claim.Type == "UserId");
-
-            return Guid.Parse(userGuidStr.Value);
+            return httpContext.User.Claims
+                .Where(claim => claim.Type == "roles")
+                .Select(claim => claim.Value.ToRole())
+                .ToList();
         }
-
-        //public static string? GetValueFromToken(HttpContext httpContext, string type)
-        //{
-        //    var userGuidStr = httpContext.User.Claims.First(claim => claim.Type == type);
-
-        //    return (userGuidStr != null) ? userGuidStr.Value : null;
-        //}
     }
 }
