@@ -10,8 +10,7 @@ public partial class NewContext : DbContext
     {
     }
 
-    public NewContext(DbContextOptions<NewContext> options)
-        : base(options)
+    public NewContext(DbContextOptions<NewContext> options) : base(options)
     {
     }
 
