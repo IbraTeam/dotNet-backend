@@ -1,7 +1,7 @@
-﻿using dotNetBackend.models;
-using dotNetBackend.models.DbFirst;
+﻿using dotNetBackend.models.DbFirst;
 using dotNetBackend.models.DTO;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace dotNetBackend.Controllers
 {
@@ -10,9 +10,18 @@ namespace dotNetBackend.Controllers
     public class Request : ControllerBase
     {
         NewContext _applicationDb;
-        public Request (NewContext applicationDb)
+        IDistributedCache _cache;
+        public Request (NewContext applicationDb, IDistributedCache cache)
         {
             _applicationDb = applicationDb;
+            _cache = cache;
+
+            var options = new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10) // Устанавливаем время жизни объекта в кэше
+            };
+
+            _cache.SetString("1", "123");
         }
 
         [HttpGet("users")]

@@ -4,10 +4,10 @@ namespace dotNetBackend.models.DTO
 {
     public class RequestsFilter
     {
-        public DateOnly start { set; get; }
-        public DateOnly end { set; get; }
-        public Status status { set; get; }
-        public TypeBooking type { set; get; }
-        public PairNumber pairNumber { set; get; }
+        public DateOnly Start { set; get; }
+        public DateOnly End { set; get; }
+        public Status Status { set; get; }
+        public TypeBooking Type { set; get; }
+        public PairNumber PairNumber { set; get; }
     }
 }
