@@ -16,14 +16,38 @@ namespace dotNetBackend.Services
             _contextDb = contextDb;
         }
 
-        public List<RequestDTO> GetRequests(RequestsFilter requestsFilter)
-        {
-            throw new NotImplementedException();
-        }
-
         public RequestDTO CancelRequest(Guid requestId)
         {
             throw new BadRequestException("Используй AcceptOrCancelRequest с параметром false");
+        }
+
+        public TableDTO GetRequests(RequestsFilter requestsFilter)
+        {
+            if (requestsFilter.WeekStart is null)
+            {
+                requestsFilter.WeekStart = DateTime.Now.AddDays(1 - (int)DateTime.Now.DayOfWeek);
+            }
+
+            var temp = _contextDb.Requests
+                .Where(request => (requestsFilter.Status != null ? request.Status == requestsFilter.Status.ToString() : true) &&
+                                  (requestsFilter.PairNumber != null ? request.PairNumber == (short)requestsFilter.PairNumber : true) &&
+                                  (requestsFilter.Type != null ? request.Type == requestsFilter.Type.ToString() : true));
+
+            requestsFilter.WeekStart = requestsFilter.WeekStart.Value.Date;
+            var dayOfWeek = DateOnly.FromDateTime((DateTime)requestsFilter.WeekStart);
+            if (dayOfWeek.DayOfWeek != DayOfWeek.Monday)
+            {
+                throw new BadRequestException("The week should start on Monday!");
+            }
+
+            temp = temp.Where(request => requestsFilter.WeekStart <= request.DateTime && request.DateTime < requestsFilter.WeekStart + new TimeSpan(7, 0, 0, 0) || request.Repeated);
+
+            return new TableDTO()
+            {
+                requests = temp.OrderBy(request => request.DateTime).ThenBy(request => request.PairNumber).SelectRequestDTO().ToList(),
+                WeekStart = requestsFilter.WeekStart.Value,
+                WeekEnd = requestsFilter.WeekStart.Value.AddDays(7)
+            };
         }
 
         public RequestDTO AcceptOrCancelRequest(Guid requestId, bool accept)
@@ -41,21 +65,27 @@ namespace dotNetBackend.Services
             return request.ToRequestDTO();
         }
 
-        public RequestDTO CreatRequest(CreateRequest createRequest)
+        public RequestDTO CreatRequest(CreateRequest createRequest, Guid userId)
         {
             var newRequest = new Request
             {
                 Name = createRequest.Name,
                 Status = Status.Pending.ToString(),
-                DateTime = createRequest.DateTime,
+                DateTime = createRequest.DateTime.ToLocalTime(),
                 Repeated = createRequest.Repeated,
                 KeyId = createRequest.KeyId,
+                UserId = userId,
                 PairNumber = (short)createRequest.PairNumber,
-                Type = createRequest.TypeBooking.ToString()
+                Type = createRequest.TypeBooking.ToString(),
+                Id = Guid.NewGuid()
             };
 
             _contextDb.Requests.Add(newRequest);
-            _contextDb.SaveChangesAsync();
+            if(_contextDb.SaveChanges() != 1)
+            {
+                throw new DbUpdateException("Failed to save!");
+            }
+
 
             return newRequest.ToRequestDTO();
         }

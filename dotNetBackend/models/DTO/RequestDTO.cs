@@ -7,12 +7,12 @@ namespace dotNetBackend.models.DTO
     public class RequestDTO
     {
         public Guid Id { get; set; }
-        public string Name { get; set; }
-        public Status Status { get; set; }
+        public string Name { get; set; } = null!;
+        public string Status { get; set; } = null!;
         public DateTime DateTime { get; set; }
         public bool Repeated { get; set; }
-        public TypeBooking TypeBooking { get; set; }
-        public PairNumber PairNumber { get; set; }
+        public string TypeBooking { get; set; } = null!;
+        public short PairNumber { get; set; }
         public Guid? KeyId { get; set; }
     }
 
@@ -25,10 +25,11 @@ namespace dotNetBackend.models.DTO
                 Id = request.Id,
                 Name = request.Name,
                 DateTime = request.DateTime,
-                Status = request.Status.ToStatus(),
-                PairNumber = request.PairNumber.ToPairNumber(),
+                Status = request.Status,
+                PairNumber = request.PairNumber,
                 Repeated = request.Repeated,
-                TypeBooking = request.Type.ToTypeBooking()
+                TypeBooking = request.Type,
+                KeyId = request.KeyId
             });
         }
 
@@ -38,12 +39,12 @@ namespace dotNetBackend.models.DTO
             {
                 Id = request.Id,
                 Name = request.Name,
-                Status = Status.Pending,
+                Status = Status.Pending.ToString(),
                 DateTime = request.DateTime,
                 Repeated = request.Repeated,
                 KeyId = request.KeyId,
-                PairNumber = request.PairNumber.ToPairNumber(),
-                TypeBooking = request.Type.ToTypeBooking()
+                PairNumber = request.PairNumber,
+                TypeBooking = request.Type
             };
         }
     }

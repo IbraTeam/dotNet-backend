@@ -1,5 +1,8 @@
-﻿namespace dotNetBackend.models.Enums
+﻿using System.Text.Json.Serialization;
+
+namespace dotNetBackend.models.Enums
 {
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum Role // Авторизации зависит от порядка ролей, чем выше, тем больше прав
     {
         USER,

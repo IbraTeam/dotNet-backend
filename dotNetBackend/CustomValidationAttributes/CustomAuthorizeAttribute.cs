@@ -1,11 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc;
-using dotNetBackend.models.DbFirst;
 using Microsoft.Extensions.Caching.Distributed;
 using dotNetBackend.models.Enums;
-using System.Linq;
 using Microsoft.IdentityModel.Tokens;
+using dotNetBackend.Helpers;
 
 namespace dotNetBackend.CustomValidationAttributes
 {
@@ -28,7 +27,7 @@ namespace dotNetBackend.CustomValidationAttributes
             Role userRole = UserRole.ToRole();
 
             // User < Student < Teacher < deam < admin
-            List<Role> roles = GetRolesFromToken(context.HttpContext);
+            List<Role> roles = JWTTokenHelper.GetRolesFromToken(context.HttpContext);
             if(roles.Where(role => (int)role >= (int)userRole).ToList().IsNullOrEmpty())
             {
                 Forbid(context, "JWTToken", "Error: bad role!");
@@ -40,7 +39,7 @@ namespace dotNetBackend.CustomValidationAttributes
         {
             var redisContext = context.HttpContext.RequestServices.GetService<IDistributedCache>();
 
-            var JTI = GetJTIFromToken(context.HttpContext);
+            var JTI = JWTTokenHelper.GetJTIFromToken(context.HttpContext);
             var accessToken = await redisContext.GetStringAsync(JTI.ToString());
             if (accessToken == null)
             {
@@ -53,21 +52,6 @@ namespace dotNetBackend.CustomValidationAttributes
         {
             context.HttpContext.Response.Headers.Add(key, message);
             context.Result = new ForbidResult();
-        }
-
-        public static Guid GetJTIFromToken(HttpContext httpContext)
-        {
-            var userGuidStr = httpContext.User.Claims.First(claim => claim.Type == "JTI");
-
-            return Guid.Parse(userGuidStr.Value);
-        }
-
-        public static List<Role> GetRolesFromToken(HttpContext httpContext)
-        {
-            return httpContext.User.Claims
-                .Where(claim => claim.Type == "roles")
-                .Select(claim => claim.Value.ToRole())
-                .ToList();
         }
     }
 }

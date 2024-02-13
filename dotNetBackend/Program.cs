@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using StackExchange.Redis;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -92,14 +91,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
-//ConnectionMultiplexer _redis = ConnectionMultiplexer.Connect($"localhost:6379");
-//var db = _redis.GetDatabase();
-
-////var db = RedisContext.GetDatabase();
-
-//db.StringSet("key", "value");
-//string? value = db.StringGet("key");
-//System.Console.WriteLine(value);
 
 app.Run();
