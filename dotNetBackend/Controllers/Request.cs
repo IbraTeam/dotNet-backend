@@ -1,4 +1,6 @@
-﻿using dotNetBackend.models.DTO;
+﻿using dotNetBackend.models;
+using dotNetBackend.models.DbFirst;
+using dotNetBackend.models.DTO;
 using Microsoft.AspNetCore.Mvc;
 
 namespace dotNetBackend.Controllers
@@ -7,10 +9,22 @@ namespace dotNetBackend.Controllers
     [ApiController]
     public class Request : ControllerBase
     {
-        [HttpGet("users")]
-        public IEnumerable<User> GetListUsers()
+        NewContext _applicationDb;
+        public Request (NewContext applicationDb)
         {
-            throw new NotImplementedException();
+            _applicationDb = applicationDb;
+        }
+
+        [HttpGet("users")]
+        public IEnumerable<UserDTO> GetListUsers()
+        {
+            //throw new NotImplementedException();
+
+            return _applicationDb.Users.Select(user => new UserDTO()
+            {
+                Id = user.Id,
+                Name = user.Name,
+            });
         }
 
         [HttpPost("create")]

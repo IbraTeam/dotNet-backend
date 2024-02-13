@@ -1,15 +1,24 @@
+using dotNetBackend.models;
+using dotNetBackend.models.DbFirst;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<NewContext>(options => options.UseNpgsql(connectionString));
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+//// Creating auto migrations
+//using var serviceScope = app.Services.CreateScope();
+//var dbContext = serviceScope.ServiceProvider.GetService<NewContext>();
+//dbContext?.Database.Migrate();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
