@@ -1,7 +1,6 @@
-﻿using dotNetBackend.models.DbFirst;
-using dotNetBackend.models.DTO;
+﻿using dotNetBackend.models.DTO;
+using dotNetBackend.Servises;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Distributed;
 
 namespace dotNetBackend.Controllers
 {
@@ -9,61 +8,47 @@ namespace dotNetBackend.Controllers
     [ApiController]
     public class Request : ControllerBase
     {
-        NewContext _applicationDb;
-        IDistributedCache _cache;
-        public Request (NewContext applicationDb, IDistributedCache cache)
+        private IRequestService _requestService;
+
+        public Request (IRequestService requestService)
         {
-            _applicationDb = applicationDb;
-            _cache = cache;
-
-            var options = new DistributedCacheEntryOptions
-            {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10) // Устанавливаем время жизни объекта в кэше
-            };
-
-            _cache.SetString("1", "123");
+            _requestService = requestService;
         }
 
         [HttpGet("users")]
-        public IEnumerable<UserDTO> GetListUsers()
+        public List<UserDTO> GetListUsers()
         {
-            //throw new NotImplementedException();
-
-            return _applicationDb.Users.Select(user => new UserDTO()
-            {
-                Id = user.Id,
-                Name = user.Name,
-            });
+            return _requestService.GetUsers();
         }
 
         [HttpPost("create")]
-        public ResponseDTO CreatRequest([FromBody] CreateRequest createRequest)
+        public RequestDTO CreatRequest([FromBody] CreateRequest createRequest)
         {
-            throw new NotImplementedException();
+            return _requestService.CreatRequest(createRequest);
         }
 
         [HttpGet]
-        public IEnumerable<RequestDTO> GetListRequests([FromQuery] RequestsFilter requestsFilter)
+        public List<RequestDTO> GetListRequests([FromQuery] RequestsFilter requestsFilter)
         {
-            throw new NotImplementedException();
+            return _requestService.GetRequests(requestsFilter);
         }
 
         [HttpDelete("{requestId}")]
-        public ResponseDTO CancelRequest([FromRoute] Guid requestId)
+        public RequestDTO CancelRequest([FromRoute] Guid requestId)
         {
-            throw new NotImplementedException();
+            return _requestService.CancelRequest(requestId);  
         }
 
         [HttpPost("{requestId}")]
-        public ResponseDTO AcceptOrCancelRequest([FromRoute] Guid requestId, [FromBody] bool accept)
+        public RequestDTO AcceptOrCancelRequest([FromRoute] Guid requestId, [FromBody] bool accept)
         {
-            throw new NotImplementedException();
+            return _requestService.AcceptOrCancelRequest(requestId, accept);
         }
 
         [HttpGet("{audienceId}")]
-        public IEnumerable<RequestDTO> GetListBooking([FromRoute] Guid audienceId)
+        public List<RequestDTO> GetListBooking([FromRoute] Guid audienceId)
         {
-            throw new NotImplementedException();
+            return _requestService.GetBooking(audienceId);
         }
     }
 }

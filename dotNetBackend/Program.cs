@@ -1,4 +1,6 @@
 using dotNetBackend.models.DbFirst;
+using dotNetBackend.Services;
+using dotNetBackend.Servises;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -42,11 +44,11 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 
-builder.Services.AddStackExchangeRedisCache(option =>
-{
-    //var connection 
-    option.Configuration = "localhost:6379";
-});
+//builder.Services.AddStackExchangeRedisCache(option =>
+//{
+//    //var connection 
+//    option.Configuration = "localhost:6379";
+//});
 
 
 // Configuring Authentication
@@ -72,6 +74,8 @@ builder.Services.AddAuthentication(authOptions =>
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<NewContext>(options => options.UseNpgsql(connectionString));
 
+builder.Services.AddScoped<IRequestService, RequestService>();
+
 var app = builder.Build();
 
 //// Creating auto migrations
@@ -90,9 +94,9 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-ConnectionMultiplexer _redis = ConnectionMultiplexer.Connect($"127.0.0.1:6379");
-var db = _redis.GetDatabase();
-db.Ping();
+//ConnectionMultiplexer _redis = ConnectionMultiplexer.Connect($"127.0.0.1:6379");
+//var db = _redis.GetDatabase();
+//db.Ping();
 
 
 
