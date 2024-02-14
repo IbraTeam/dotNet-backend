@@ -1,10 +1,4 @@
-﻿using dotNetBackend.models.DbFirst;
-using dotNetBackend.models.Enums;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
+﻿using dotNetBackend.models.Enums;
 
 namespace dotNetBackend.Helpers
 {
@@ -30,6 +24,17 @@ namespace dotNetBackend.Helpers
                 .Where(claim => claim.Type == "roles")
                 .Select(claim => claim.Value.ToRole())
                 .ToList();
+        }
+
+        public static Role GetHeighstRoleFromToken(HttpContext httpContext)
+        {
+            var roles = httpContext.User.Claims
+                .Where(claim => claim.Type == "roles")
+                .Select(claim => claim.Value.ToRole())
+                .ToList();
+            roles.Sort(new RoleComparator());
+
+            return roles[roles.Count - 1];
         }
     }
 }

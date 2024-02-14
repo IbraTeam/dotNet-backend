@@ -16,7 +16,7 @@ namespace dotNetBackend.Services
             _contextDb = contextDb;
         }
 
-        public RequestDTO CancelRequest(Guid requestId)
+        public RequestDTO CancelRequest(Guid requestId, Guid userId)
         {
             throw new BadRequestException("Используй AcceptOrCancelRequest с параметром false");
         }
@@ -40,7 +40,8 @@ namespace dotNetBackend.Services
                 throw new BadRequestException("The week should start on Monday!");
             }
 
-            temp = temp.Where(request => requestsFilter.WeekStart <= request.DateTime && request.DateTime < requestsFilter.WeekStart + new TimeSpan(7, 0, 0, 0) || request.Repeated);
+            temp = temp.Where(request => requestsFilter.WeekStart <= request.DateTime && 
+                              request.DateTime < requestsFilter.WeekStart + new TimeSpan(7, 0, 0, 0) || request.Repeated);
 
             return new TableDTO()
             {
@@ -65,13 +66,31 @@ namespace dotNetBackend.Services
             return request.ToRequestDTO();
         }
 
-        public RequestDTO CreatRequest(CreateRequest createRequest, Guid userId)
+        public RequestDTO CreatRequest(CreateRequest createRequest, Guid userId, Role userRole)
         {
+            createRequest.DateTime = createRequest.DateTime.Date.ToLocalTime();
+            Status requestStatus = Status.Pending;
+
+            if (userRole == Role.Student)
+            {
+                var teachersAcceptedRequests = _contextDb.Requests
+                    .Include(request => request.User)
+                    .Where(request => request.KeyId == createRequest.KeyId &&
+                           (request.DateTime.Date == createRequest.DateTime.Date ||
+                            request.Repeated && request.DateTime.DayOfWeek == createRequest.DateTime.DayOfWeek) &&
+                           request.PairNumber == (short)createRequest.PairNumber &&
+                           request.Status == Status.Accepted.ToString() &&
+                           (request.User.Role == Role.Teacher.ToString() || request.User.Role == Role.Dean.ToString()));
+
+                requestStatus = teachersAcceptedRequests.Any() ? Status.Rejected : Status.Pending;
+                createRequest.Repeated = false;
+            }
+
             var newRequest = new Request
             {
                 Name = createRequest.Name,
-                Status = Status.Pending.ToString(),
-                DateTime = createRequest.DateTime.ToLocalTime(),
+                Status = requestStatus.ToString(),
+                DateTime = createRequest.DateTime,
                 Repeated = createRequest.Repeated,
                 KeyId = createRequest.KeyId,
                 UserId = userId,
@@ -85,7 +104,6 @@ namespace dotNetBackend.Services
             {
                 throw new DbUpdateException("Failed to save!");
             }
-
 
             return newRequest.ToRequestDTO();
         }
@@ -120,4 +138,26 @@ namespace dotNetBackend.Services
     6. Получение списка заявок пользователя на забронированные аудитории - /api/request/users
 
     //    Получение расписания (подтвержденные заявки) - /api/request/approved
+
+Задачи:
+    1. Автопринятие завок + 
+    2. Автоотклюнение заявок студентов +
+
+    3. Отлов исключений
+
+    5. Действие системы если препод подал заявку на забронированную аудиторию
+    6. Получение расписания подтвержденных заявок(открыт для всех)
+    7. В модель заявки указать день недели
+    8. Автоотклонение заявок студентов если учителю подтвердили заявку
+
+
+    {
+        "name": "string",
+        "dateTime": "2024-02-18T06:05:48.750Z",
+        "repeated": true,
+        "typeBooking": "Booking",
+        "pairNumber": "First",
+        "keyId": "1806dab8-e3bd-42b5-969c-d6c0f06662c8"
+    }
+             
  */

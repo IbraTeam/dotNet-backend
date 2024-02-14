@@ -5,11 +5,11 @@ namespace dotNetBackend.models.Enums
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum Role // Авторизации зависит от порядка ролей, чем выше, тем больше прав
     {
-        USER,
-        STUDENT,
-        TEACHER,
-        DEAN,
-        ADMIN
+        User = 0,
+        Student = 1,
+        Teacher = 2,
+        Dean = 3,
+        Admin = 4
     }
 
     public static class RoleExtantion
@@ -18,13 +18,23 @@ namespace dotNetBackend.models.Enums
         {
             return status switch
             {
-                "DEAN" => Role.DEAN,
-                "TEACHER" => Role.TEACHER,
-                "STUDENT" => Role.STUDENT,
-                "USER" => Role.USER,
-                "ADMIN" => Role.ADMIN,
+                "Dean" => Role.Dean,
+                "Teacher" => Role.Teacher,
+                "Student" => Role.Student,
+                "User" => Role.User,
+                "Admin" => Role.Admin,
                 _ => throw new InvalidDataException()
             };
+        }
+    }
+
+    public class RoleComparator : IComparer<Role>
+    {
+        public int Compare(Role x, Role y)
+        {
+            if (x == y) return 0;
+            if ((int) x < (int) y) return -1;
+            return 1;
         }
     }
 }

@@ -39,7 +39,7 @@ namespace dotNetBackend.models.DTO
             {
                 Id = request.Id,
                 Name = request.Name,
-                Status = Status.Pending.ToString(),
+                Status = request.Status.ToString(),
                 DateTime = request.DateTime,
                 Repeated = request.Repeated,
                 KeyId = request.KeyId,
