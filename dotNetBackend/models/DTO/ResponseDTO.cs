@@ -4,5 +4,6 @@
     {
         public int StatusCode { get; set; }
         public string? Message { get; set; }
+        public string? Value { get; set; }
     }
 }

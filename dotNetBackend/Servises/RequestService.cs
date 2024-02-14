@@ -16,9 +16,16 @@ namespace dotNetBackend.Services
             _contextDb = contextDb;
         }
 
-        public RequestDTO CancelRequest(Guid requestId, Guid userId)
+        public void CancelRequest(Guid requestId, Guid userId)
         {
-            throw new BadRequestException("Используй AcceptOrCancelRequest с параметром false");
+            var request = _contextDb.Requests.FirstOrDefault(request => request.UserId == userId && request.Id == requestId);
+            if (request == null)
+            {
+                throw new NotFoundException($"Request {requestId} or user {userId} not found!");
+            }
+
+            _contextDb.Requests.Remove(request);
+            _contextDb.SaveChanges();
         }
 
         public TableDTO GetRequests(RequestsFilter requestsFilter)
@@ -40,7 +47,7 @@ namespace dotNetBackend.Services
                 throw new BadRequestException("The week should start on Monday!");
             }
 
-            temp = temp.Where(request => requestsFilter.WeekStart <= request.DateTime && 
+            temp = temp.Where(request => requestsFilter.WeekStart < request.DateTime && 
                               request.DateTime < requestsFilter.WeekStart + new TimeSpan(7, 0, 0, 0) || request.Repeated);
 
             return new TableDTO()
@@ -60,7 +67,33 @@ namespace dotNetBackend.Services
                 throw new NotFoundException($"Request with guid {requestId} not found!");
             }
 
+            var thereIsAcceptedRequest = _contextDb.Requests
+                .Any(acceptedRequest => (acceptedRequest.DateTime.Date == request.DateTime.Date ||
+                                            (acceptedRequest.Repeated || request.Repeated) && request.DateTime.DayOfWeek == acceptedRequest.DateTime.DayOfWeek) && 
+                                        acceptedRequest.PairNumber == request.PairNumber &&
+                                        acceptedRequest.Status == Status.Accepted.ToString());
+            if (thereIsAcceptedRequest && accept)
+            {
+                throw new BadRequestException("There is a confirmed application!");
+            }
+
             request.Status = (accept ? Status.Accepted : Status.Rejected).ToString();
+            _contextDb.SaveChanges();
+
+            // Отменяем заявки студентов в ту же аудиторию на ту же дата-время
+            var pendingRequests = _contextDb.Requests
+                .Include(request => request.User)
+                .Where(pendingRequest => pendingRequest.Status == Status.Pending.ToString() &&
+                                 pendingRequest.PairNumber == request.PairNumber &&
+                                 (pendingRequest.DateTime == request.DateTime ||
+                                      request.Repeated && pendingRequest.DateTime.DayOfWeek == request.DateTime.DayOfWeek) &&
+                                 pendingRequest.User.Role == Role.Student.ToString());
+
+            foreach(Request req in  pendingRequests)
+            {
+                req.Status = Status.Rejected.ToString();
+            }
+
             _contextDb.SaveChanges();
 
             return request.ToRequestDTO();
@@ -77,7 +110,7 @@ namespace dotNetBackend.Services
                     .Include(request => request.User)
                     .Where(request => request.KeyId == createRequest.KeyId &&
                            (request.DateTime.Date == createRequest.DateTime.Date ||
-                            request.Repeated && request.DateTime.DayOfWeek == createRequest.DateTime.DayOfWeek) &&
+                               request.Repeated && request.DateTime.DayOfWeek == createRequest.DateTime.DayOfWeek) &&
                            request.PairNumber == (short)createRequest.PairNumber &&
                            request.Status == Status.Accepted.ToString() &&
                            (request.User.Role == Role.Teacher.ToString() || request.User.Role == Role.Dean.ToString()));
@@ -108,11 +141,10 @@ namespace dotNetBackend.Services
             return newRequest.ToRequestDTO();
         }
 
-        public List<RequestDTO> GetBooking(Guid audienceId)
+        public List<RequestDTO> GetAcceptedRequests(Guid audienceId)
         {
             return _contextDb.Requests
-                .Include(request => request.Key)
-                .Where(reques => reques.Key.Id == audienceId && reques.Status == Status.Accepted.ToString())
+                .Where(reques => reques.KeyId == audienceId && reques.Status == Status.Accepted.ToString())
                 .SelectRequestDTO()
                 .ToList();
         }
@@ -142,13 +174,14 @@ namespace dotNetBackend.Services
 Задачи:
     1. Автопринятие завок + 
     2. Автоотклюнение заявок студентов +
+    3. Отлов исключений +
+    5. Действие системы если препод подал заявку на забронированную аудиторию + 
+    8. Автоотклонение заявок студентов если учителю подтвердили заявку +
 
-    3. Отлов исключений
-
-    5. Действие системы если препод подал заявку на забронированную аудиторию
-    6. Получение расписания подтвержденных заявок(открыт для всех)
+    6. Получение расписания подтвержденных заявок(открыт для всех)  Поменять List на TableDTO
     7. В модель заявки указать день недели
-    8. Автоотклонение заявок студентов если учителю подтвердили заявку
+
+    8. Проверка, что не существую заявки дубликата при создании
 
 
     {

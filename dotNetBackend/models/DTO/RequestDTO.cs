@@ -1,6 +1,4 @@
 ﻿using dotNetBackend.models.DbFirst;
-using dotNetBackend.models.Enums;
-using System.Net;
 
 namespace dotNetBackend.models.DTO
 {

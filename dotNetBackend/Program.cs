@@ -1,3 +1,4 @@
+using dotNetBackend.Middlewares;
 using dotNetBackend.models.DbFirst;
 using dotNetBackend.Services;
 using dotNetBackend.Servises;
@@ -86,6 +87,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
