@@ -13,44 +13,41 @@ namespace dotNetBackend.Controllers
     {
         private IRequestService _requestService;
 
-        public Request (IRequestService requestService)
+        public Request (IRequestService requestService, IConfiguration configuration)
         {
             _requestService = requestService;
         }
 
-        [HttpGet("users")] // Получение списка заявок пользователя (со всеми статусами) - /api/request/users +++
-        [CustomAuthorize(UserRole = "STUDENT")]
-        public List<RequestDTO> GetUsersRequests()
+        [HttpGet("users")] // Получение списка заявок пользователя (со всеми статусами) - /api/request/users 
+        [CustomAuthorize(UserRole = "Student")]
+        public TableDTO GetUsersRequests([FromQuery] DateTime? WeekStart)
         {
             Guid userId = JWTTokenHelper.GetUserIdFromToken(HttpContext);
 
-            return _requestService.GetUsersRequests(userId);
+            return _requestService.GetUsersRequests(userId, WeekStart);
         }
 
-        [HttpPost("create")]  // Создание заявки - /api/request/create +++
-        [CustomAuthorize(UserRole = "STUDENT")]
+        [HttpPost("create")]  // Создание заявки - /api/request/create 
+        [CustomAuthorize(UserRole = "Student")]
         public RequestDTO CreatRequest([FromBody] CreateRequest createRequest) 
         {
-            //Guid userId = Guid.Parse("fe8d64c2-5828-458d-a71a-566c5b0d0d5a"); //JWTTokenHelper.GetUserIdFromToken(HttpContext);
-            //Role userRole =  Role.Student;// JWTTokenHelper.GetHeighstRoleFromToken(HttpContext);
             Guid userId = JWTTokenHelper.GetUserIdFromToken(HttpContext);
             Role userRole = JWTTokenHelper.GetHeighstRoleFromToken(HttpContext);
 
             return _requestService.CreateRequest(createRequest, userId, userRole);
         }
 
-        [HttpGet] // Получение всех заявок с фильтрацией и пагинацией(для деканата): /api/request +++
-        [CustomAuthorize(UserRole = "DEAN")]
+        [HttpGet] // Получение всех заявок с фильтрацией и пагинацией(для деканата): /api/request 
+        [CustomAuthorize(UserRole = "Dean")]
         public TableDTO GetListRequests([FromQuery] RequestsFilter requestsFilter)
         {
             return _requestService.GetRequests(requestsFilter);
         }
 
-        [HttpDelete("{requestId}")] // Отмена заявки: /api/request/:requestId(delete) +++
-        [CustomAuthorize(UserRole = "STUDENT")]
+        [HttpDelete("{requestId}")] // Отмена заявки: /api/request/:requestId(delete) 
+        [CustomAuthorize(UserRole = "Student")]
         public ResponseDTO CancelRequest([FromRoute] Guid requestId)
         {
-            // Guid userId = Guid.Parse("fe8d64c2-5828-458d-a71a-566c5b0d0d5a");
             Guid userId = JWTTokenHelper.GetUserIdFromToken(HttpContext);
 
             _requestService.CancelRequest(requestId, userId);
@@ -62,18 +59,18 @@ namespace dotNetBackend.Controllers
             };
         }
 
-        [HttpPost("{requestId}")] // Подтверждение/отклонение заявки (для деканата): /api/request/:requestId (post) +++
-        [CustomAuthorize(UserRole = "DEAN")]
+        [HttpPost("{requestId}")] // Подтверждение/отклонение заявки (для деканата): /api/request/:requestId (post) 
+        [CustomAuthorize(UserRole = "Dean")]
         public RequestDTO AcceptOrCancelRequest([FromRoute] Guid requestId, [FromBody] bool accept)
         {
             return _requestService.AcceptOrCancelRequest(requestId, accept);
         }
 
-        [HttpGet("{audienceId}")] // Получение подтвержденных заявок /api/request/:audienceId
-        //[CustomAuthorize(UserRole = "USER")]
-        public List<RequestDTO> GetListBooking([FromRoute] Guid audienceId)
+        [HttpGet("approved/{audienceId}")] // Получение подтвержденных заявок /api/request/approved/:audienceId
+        [CustomAuthorize(UserRole = "User")]
+        public TableDTO GetListBooking([FromRoute] Guid audienceId, [FromQuery] DateTime? WeekStart)
         {
-            return _requestService.GetAcceptedRequests(audienceId);
+            return _requestService.GetAcceptedRequests(audienceId, WeekStart);
         }
     }
 }

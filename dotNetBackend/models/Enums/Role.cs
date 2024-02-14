@@ -19,10 +19,15 @@ namespace dotNetBackend.models.Enums
             return status switch
             {
                 "Dean" => Role.Dean,
+                "ROLE_DEAN" => Role.Dean,
                 "Teacher" => Role.Teacher,
+                "ROLE_TEACHER" => Role.Teacher,
                 "Student" => Role.Student,
+                "ROLE_STUDENT" => Role.Student,
                 "User" => Role.User,
+                "ROLE_USER" => Role.User,
                 "Admin" => Role.Admin,
+                "ROLE_ADMIN" => Role.Admin,
                 _ => throw new InvalidDataException()
             };
         }

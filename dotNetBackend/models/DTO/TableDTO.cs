@@ -2,7 +2,7 @@
 {
     public class TableDTO
     {
-        public List<RequestDTO> requests {  get; set; }
+        public List<RequestDTO> Requests { get; set; } = null!;
         public DateTime WeekStart { get; set; }
         public DateTime WeekEnd { get; set; }
     }

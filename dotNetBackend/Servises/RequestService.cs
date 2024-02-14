@@ -52,7 +52,7 @@ namespace dotNetBackend.Services
 
             return new TableDTO()
             {
-                requests = temp.OrderBy(request => request.DateTime).ThenBy(request => request.PairNumber).SelectRequestDTO().ToList(),
+                Requests = temp.OrderBy(request => request.DateTime).ThenBy(request => request.PairNumber).SelectRequestDTO().ToList(),
                 WeekStart = requestsFilter.WeekStart.Value,
                 WeekEnd = requestsFilter.WeekStart.Value.AddDays(7)
             };
@@ -119,7 +119,7 @@ namespace dotNetBackend.Services
                 createRequest.Repeated = false;
             }
 
-            var newRequest = new Request
+            var newRequest = new Request()
             {
                 Name = createRequest.Name,
                 Status = requestStatus.ToString(),
@@ -141,57 +141,53 @@ namespace dotNetBackend.Services
             return newRequest.ToRequestDTO();
         }
 
-        public List<RequestDTO> GetAcceptedRequests(Guid audienceId)
+        public TableDTO GetAcceptedRequests(Guid audienceId, DateTime? WeekStart)
         {
-            return _contextDb.Requests
-                .Where(reques => reques.KeyId == audienceId && reques.Status == Status.Accepted.ToString())
-                .SelectRequestDTO()
-                .ToList();
+            //if (WeekStart is null)
+            //{
+            //    WeekStart = DateTime.Now.AddDays(1 - (int)DateTime.Now.DayOfWeek);
+            //}
+
+            //var requests = _contextDb.Requests
+            //    .Where(reques => reques.KeyId == audienceId && reques.Status == Status.Accepted.ToString())
+            //    .SelectRequestDTO()
+            //    .ToList();
+
+            //return new TableDTO()
+            //{
+            //    WeekStart = (DateTime)WeekStart,
+            //    WeekEnd = WeekStart.Value.AddDays(7),
+            //    Requests = requests
+            //};
+
+            return GetRequests(new RequestsFilter() { Status = Status.Accepted, WeekStart = WeekStart });
         }
 
-        public List<RequestDTO> GetUsersRequests(Guid userId)
+        public TableDTO GetUsersRequests(Guid userId, DateTime? WeekStart)
         {
-            return _contextDb.Requests
+            if (WeekStart is null)
+            {
+                WeekStart = DateTime.Now.AddDays(1 - (int)DateTime.Now.DayOfWeek);
+            }
+
+            var request = _contextDb.Requests
                 .Where(request => request.UserId == userId)
                 .SelectRequestDTO()
                 .ToList();
+
+            return new TableDTO()
+            {
+                WeekStart = (DateTime)WeekStart,
+                WeekEnd = WeekStart.Value.AddDays(7),
+                Requests = request
+            };
         }
     }
 }
 
 /*
-    1. Получение всех заявок с фильтрацией и пагинацией(для деканата): /api/request 
-
-    2. Отмена заявки: /api/request/:requestId  (delete)
-
-    3. Подтверждение/отклонение заявки (для деканата): /api/request/:requestId (post)
-    4. Создание заявки - /api/request/create
-    5. Получение бронирований аудитории (передаем id аудитории) /api/request/:audienceId
-    6. Получение списка заявок пользователя на забронированные аудитории - /api/request/users
-
-    //    Получение расписания (подтвержденные заявки) - /api/request/approved
-
 Задачи:
-    1. Автопринятие завок + 
-    2. Автоотклюнение заявок студентов +
-    3. Отлов исключений +
-    4. Действие системы если препод подал заявку на забронированную аудиторию + 
-    5. Автоотклонение заявок студентов если учителю подтвердили заявку +
-    6. В модель заявки указать день недели + 
-
-    Осталось:
-    7. Получение расписания подтвержденных заявок(открыт для всех)  Поменять List на TableDTO
     8. Проверка, что не существую заявки дубликата при создании
     9. Докер
-
-
-    {
-        "name": "string",
-        "dateTime": "2024-02-18T06:05:48.750Z",
-        "repeated": true,
-        "typeBooking": "Booking",
-        "pairNumber": "First",
-        "keyId": "1806dab8-e3bd-42b5-969c-d6c0f06662c8"
-    }
              
  */

@@ -43,12 +43,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-
-builder.Services.AddStackExchangeRedisCache(option =>
-{
-    option.Configuration = builder.Configuration.GetConnectionString("RedisConnection");
-});
-
+RedisManager.ConnectionString = builder.Configuration.GetConnectionString("RedisConnection");
 
 // Configuring Authentication
 var secret = builder.Configuration["JWTTokenSettings:Secret"] ?? throw new InvalidOperationException("Secret not configured");
@@ -66,7 +61,8 @@ builder.Services.AddAuthentication(authOptions =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secret)),
         ValidateIssuer = false,
         ValidateAudience = false,
-        ClockSkew = new TimeSpan(0, 0, TimeSpanSecond)
+        ClockSkew = new TimeSpan(0, 0, TimeSpanSecond),
+        ValidateLifetime = false
     };
 });
 
@@ -76,11 +72,6 @@ builder.Services.AddDbContext<NewContext>(options => options.UseNpgsql(connectio
 builder.Services.AddScoped<IRequestService, RequestService>();
 
 var app = builder.Build();
-
-//// Creating auto migrations
-//using var serviceScope = app.Services.CreateScope();
-//var dbContext = serviceScope.ServiceProvider.GetService<NewContext>();
-//dbContext?.Database.Migrate();
 
 if (app.Environment.IsDevelopment())
 {
