@@ -99,7 +99,7 @@ namespace dotNetBackend.Services
             return request.ToRequestDTO();
         }
 
-        public RequestDTO CreatRequest(CreateRequest createRequest, Guid userId, Role userRole)
+        public RequestDTO CreateRequest(CreateRequest createRequest, Guid userId, Role userRole)
         {
             createRequest.DateTime = createRequest.DateTime.Date.ToLocalTime();
             Status requestStatus = Status.Pending;
@@ -175,13 +175,14 @@ namespace dotNetBackend.Services
     1. Автопринятие завок + 
     2. Автоотклюнение заявок студентов +
     3. Отлов исключений +
-    5. Действие системы если препод подал заявку на забронированную аудиторию + 
-    8. Автоотклонение заявок студентов если учителю подтвердили заявку +
+    4. Действие системы если препод подал заявку на забронированную аудиторию + 
+    5. Автоотклонение заявок студентов если учителю подтвердили заявку +
+    6. В модель заявки указать день недели + 
 
-    6. Получение расписания подтвержденных заявок(открыт для всех)  Поменять List на TableDTO
-    7. В модель заявки указать день недели
-
+    Осталось:
+    7. Получение расписания подтвержденных заявок(открыт для всех)  Поменять List на TableDTO
     8. Проверка, что не существую заявки дубликата при создании
+    9. Докер
 
 
     {

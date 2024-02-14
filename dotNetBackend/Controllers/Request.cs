@@ -36,7 +36,7 @@ namespace dotNetBackend.Controllers
             Guid userId = JWTTokenHelper.GetUserIdFromToken(HttpContext);
             Role userRole = JWTTokenHelper.GetHeighstRoleFromToken(HttpContext);
 
-            return _requestService.CreatRequest(createRequest, userId, userRole);
+            return _requestService.CreateRequest(createRequest, userId, userRole);
         }
 
         [HttpGet] // Получение всех заявок с фильтрацией и пагинацией(для деканата): /api/request +++

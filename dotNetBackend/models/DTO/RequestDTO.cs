@@ -8,6 +8,13 @@ namespace dotNetBackend.models.DTO
         public string Name { get; set; } = null!;
         public string Status { get; set; } = null!;
         public DateTime DateTime { get; set; }
+        public int DayNumb {
+            get
+            {
+                if (DateTime.DayOfWeek == DayOfWeek.Sunday) return 6;
+                return (int)DateTime.DayOfWeek - 1;
+            }
+        }
         public bool Repeated { get; set; }
         public string TypeBooking { get; set; } = null!;
         public short PairNumber { get; set; }

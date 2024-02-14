@@ -2,7 +2,7 @@
 
 namespace dotNetBackend.models.Enums
 {
-    [JsonConverter(typeof(JsonStringEnumConverter))]
+    // [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum PairNumber
     {
         First,
