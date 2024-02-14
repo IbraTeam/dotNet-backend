@@ -104,6 +104,17 @@ namespace dotNetBackend.Services
             createRequest.DateTime = createRequest.DateTime.Date.ToLocalTime();
             Status requestStatus = Status.Pending;
 
+            var dublicatRequests = _contextDb.Requests
+                    .Include(request => request.User)
+                    .Any(request => request.KeyId == createRequest.KeyId &&
+                                      request.UserId == userId &&
+                                      (request.DateTime.Date == createRequest.DateTime.Date ||
+                                          request.Repeated && request.DateTime.DayOfWeek == createRequest.DateTime.DayOfWeek));
+            if (dublicatRequests)
+            {
+                throw new BadRequestException("Such an request already exists!");
+            }
+
             if (userRole == Role.Student)
             {
                 var teachersAcceptedRequests = _contextDb.Requests
@@ -143,23 +154,6 @@ namespace dotNetBackend.Services
 
         public TableDTO GetAcceptedRequests(Guid audienceId, DateTime? WeekStart)
         {
-            //if (WeekStart is null)
-            //{
-            //    WeekStart = DateTime.Now.AddDays(1 - (int)DateTime.Now.DayOfWeek);
-            //}
-
-            //var requests = _contextDb.Requests
-            //    .Where(reques => reques.KeyId == audienceId && reques.Status == Status.Accepted.ToString())
-            //    .SelectRequestDTO()
-            //    .ToList();
-
-            //return new TableDTO()
-            //{
-            //    WeekStart = (DateTime)WeekStart,
-            //    WeekEnd = WeekStart.Value.AddDays(7),
-            //    Requests = requests
-            //};
-
             return GetRequests(new RequestsFilter() { Status = Status.Accepted, WeekStart = WeekStart });
         }
 
@@ -188,6 +182,6 @@ namespace dotNetBackend.Services
 /*
 Задачи:
     8. Проверка, что не существую заявки дубликата при создании
+
     9. Докер
-             
  */
