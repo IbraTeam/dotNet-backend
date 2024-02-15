@@ -8,7 +8,7 @@ using dotNetBackend.models.DbFirst;
 
 namespace dotNetBackend.CustomValidationAttributes
 {
-    public class CustomAuthorizeAttribute : AuthorizeAttribute, IAsyncAuthorizationFilter
+    public class CustomAuthorizeAttribute : Attribute, IAsyncAuthorizationFilter
     {
         public string? UserRole { set; get; }
 
