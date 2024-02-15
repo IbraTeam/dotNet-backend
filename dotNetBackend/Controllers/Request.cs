@@ -1,5 +1,6 @@
 ﻿using dotNetBackend.CustomValidationAttributes;
 using dotNetBackend.Helpers;
+using dotNetBackend.models.DbFirst;
 using dotNetBackend.models.DTO;
 using dotNetBackend.models.Enums;
 using dotNetBackend.Servises;
@@ -12,10 +13,12 @@ namespace dotNetBackend.Controllers
     public class Request : ControllerBase
     {
         private IRequestService _requestService;
+        private NewContext _newContext;
 
-        public Request (IRequestService requestService, IConfiguration configuration)
+        public Request (IRequestService requestService, NewContext newContext)
         {
             _requestService = requestService;
+            _newContext = newContext;
         }
 
         [HttpGet("users")] // Получение списка заявок пользователя (со всеми статусами) - /api/request/users 
@@ -71,6 +74,37 @@ namespace dotNetBackend.Controllers
         public TableDTO GetListBooking([FromRoute] Guid audienceId, [FromQuery] DateTime? WeekStart)
         {
             return _requestService.GetAcceptedRequests(audienceId, WeekStart);
+        }
+
+        [HttpGet("test")]
+        public string Test()
+        {
+            return "Ok";
+        }
+
+        [HttpGet("testDb")]
+        public string TestBd()
+        {
+            var request = _newContext.Requests.FirstOrDefault();
+
+            string ans = "request not found";
+
+            if (request != null)
+            {
+                ans = $"some request guid: {request.Id}";
+            }
+
+            return ans;
+        }
+
+        [HttpGet("testRedis")]
+        public string TestRedis()
+        {
+            var db = RedisManager.GetDatabase();
+
+            string? key = db.StringGet("key");
+
+            return key != null ? $"there is key with value: {key}" : "there is not key";
         }
     }
 }
