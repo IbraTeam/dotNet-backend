@@ -19,6 +19,7 @@ namespace dotNetBackend.models.DTO
         public string TypeBooking { get; set; } = null!;
         public short PairNumber { get; set; }
         public Guid? KeyId { get; set; }
+        public UserDTO? User { get; set; } = null!;
     }
 
     public static class RequestExtantion
@@ -34,7 +35,14 @@ namespace dotNetBackend.models.DTO
                 PairNumber = request.PairNumber,
                 Repeated = request.Repeated,
                 TypeBooking = request.Type,
-                KeyId = request.KeyId
+                KeyId = request.KeyId,
+                User = request.User == null ? null : new UserDTO()
+                {
+                    Id = request.User.Id,
+                    Name = request.User.Name,
+                    Email = request.User.Email,
+                    Role = request.User.Role,
+                }
             });
         }
 
@@ -49,7 +57,14 @@ namespace dotNetBackend.models.DTO
                 Repeated = request.Repeated,
                 KeyId = request.KeyId,
                 PairNumber = request.PairNumber,
-                TypeBooking = request.Type
+                TypeBooking = request.Type,
+                User = request.User == null ? null : new UserDTO()
+                {
+                    Id = request.User.Id,
+                    Name = request.User.Name,
+                    Email = request.User.Email,
+                    Role = request.User.Role,
+                }
             };
         }
     }

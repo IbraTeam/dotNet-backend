@@ -11,5 +11,7 @@ namespace dotNetBackend.Servises
         void CancelRequest(Guid requestId, Guid userId); // Отмена заявки: /api/request/:requestId  (delete)
         RequestDTO AcceptOrCancelRequest(Guid requestId, bool accept); // Подтверждение/отклонение заявки (для деканата): /api/request/:requestId (post)
         TableDTO GetAcceptedRequests(Guid audienceId, DateTime? WeekStart); // Получение бронирований аудитории (передаем id аудитории) /api/request/:audienceId
+        List<Audience> GetFreeAudiences(AudienceFilter audienceFilter);
+        RequestDTO CreatePair(CreatePair createPair);
     }
 }

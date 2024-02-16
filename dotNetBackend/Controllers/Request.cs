@@ -76,6 +76,20 @@ namespace dotNetBackend.Controllers
             return _requestService.GetAcceptedRequests(audienceId, WeekStart);
         }
 
+        [HttpGet("free")]
+        [CustomAuthorize(UserRole = "Student")]
+        public List<Audience> GetListAudience([FromQuery] AudienceFilter audienceFilter)
+        {
+            return _requestService.GetFreeAudiences(audienceFilter);
+        }
+
+        [HttpPost("createPair")]
+        [CustomAuthorize(UserRole = "Dean")]
+        public RequestDTO CreatePair([FromBody] CreatePair createPair)
+        {
+            return _requestService.CreatePair(createPair);
+        }
+
         [HttpGet("test")]
         public string Test()
         {
