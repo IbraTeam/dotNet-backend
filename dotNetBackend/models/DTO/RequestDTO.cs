@@ -6,6 +6,7 @@ namespace dotNetBackend.models.DTO
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = null!;
+        public string PairName { get; set; } = null!;
         public string Status { get; set; } = null!;
         public DateTime DateTime { get; set; }
         public int DayNumb {
@@ -29,7 +30,8 @@ namespace dotNetBackend.models.DTO
             return request.Select(request => new RequestDTO()
             {
                 Id = request.Id,
-                Name = request.Name,
+                Name = request.Key.Room,
+                PairName = request.Name,
                 DateTime = request.DateTime,
                 Status = request.Status,
                 PairNumber = request.PairNumber,
@@ -51,7 +53,8 @@ namespace dotNetBackend.models.DTO
             return new RequestDTO
             {
                 Id = request.Id,
-                Name = request.Name,
+                Name = request.Key.Room,
+                PairName = request.Name,
                 Status = request.Status.ToString(),
                 DateTime = request.DateTime,
                 //Repeated = request.Repeated,

@@ -10,5 +10,6 @@ namespace dotNetBackend.models.DTO
         public TypeBooking TypeBooking { get; set; }
         public PairNumber PairNumber { get; set; }
         public Guid KeyId { get; set; }
+        public string? PairName { get; set; }
     }
 }

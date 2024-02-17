@@ -37,6 +37,7 @@ namespace dotNetBackend.Services
 
             var temp = _contextDb.Requests
                 .Include(request => request.User)
+                .Include(request => request.Key)
                 .Where(request => (requestsFilter.Status != null ? request.Status == requestsFilter.Status.ToString() : true) &&
                                   (requestsFilter.PairNumber != null ? request.PairNumber == (short)requestsFilter.PairNumber : true) &&
                                   (requestsFilter.Type != null ? request.Type == requestsFilter.Type.ToString() : true) &&
@@ -146,7 +147,7 @@ namespace dotNetBackend.Services
             {
                 var newRequest = new Request()
                 {
-                    Name = key.Room,
+                    Name = createRequest.PairName ?? "",
                     Status = requestStatus.ToString(),
                     DateTime = createRequest.DateTime.AddDays(7 * i),
                     KeyId = createRequest.KeyId,
@@ -179,6 +180,7 @@ namespace dotNetBackend.Services
             }
 
             var request = _contextDb.Requests
+                .Include(request => request.Key)
                 .Include(request => request.User)
                 .Where(request => request.UserId == userId)
                 .SelectRequestDTO()
@@ -236,7 +238,8 @@ namespace dotNetBackend.Services
                 KeyId = createPair.KeyId,
                 PairNumber = createPair.PairNumber,
                 RepeatCount = createPair.RepeatCount,
-                TypeBooking = TypeBooking.Pair
+                TypeBooking = TypeBooking.Pair,
+                PairName = createPair.PairName
             }, createPair.TeacherId, Role.Teacher, true);
         }
     }

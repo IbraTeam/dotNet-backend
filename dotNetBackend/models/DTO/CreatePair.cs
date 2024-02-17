@@ -9,5 +9,6 @@ namespace dotNetBackend.models.DTO
         public PairNumber PairNumber { get; set; }
         public Guid TeacherId { get; set; }
         public Guid KeyId { get; set; }
+        public string PairName { get; set; }
     }
 }
