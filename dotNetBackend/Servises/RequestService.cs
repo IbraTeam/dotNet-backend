@@ -4,7 +4,6 @@ using dotNetBackend.models.DTO;
 using dotNetBackend.models.Enums;
 using dotNetBackend.Servises;
 using Microsoft.EntityFrameworkCore;
-using System.Data.Common;
 
 namespace dotNetBackend.Services
 {
@@ -17,7 +16,7 @@ namespace dotNetBackend.Services
             _contextDb = contextDb;
         }
 
-        public void CancelRequest(Guid requestId, Guid userId)
+        public void CancelRequest(Guid requestId, Guid userId) // ++
         {
             var request = _contextDb.Requests.FirstOrDefault(request => request.UserId == userId && request.Id == requestId);
             if (request == null)
@@ -29,7 +28,7 @@ namespace dotNetBackend.Services
             _contextDb.SaveChanges();
         }
 
-        public TableDTO GetRequests(RequestsFilter requestsFilter)
+        public TableDTO GetRequests(RequestsFilter requestsFilter) // ++
         {
             if (requestsFilter.WeekStart is null)
             {
@@ -50,7 +49,7 @@ namespace dotNetBackend.Services
             }
 
             temp = temp.Where(request => requestsFilter.WeekStart < request.DateTime &&
-                              request.DateTime < requestsFilter.WeekStart + new TimeSpan(7, 0, 0, 0) || request.Repeated);
+                              request.DateTime < requestsFilter.WeekStart + new TimeSpan(7, 0, 0, 0));
 
             return new TableDTO()
             {
@@ -60,112 +59,118 @@ namespace dotNetBackend.Services
             };
         }
 
-        public RequestDTO AcceptOrCancelRequest(Guid requestId, bool accept)
+        public void AcceptOrCancelRequest(Guid requestId, bool accept) // ++
         {
-            var request = _contextDb.Requests.FirstOrDefault(request => request.Id == requestId);
-
-            if (request is null)
+            var requestFirst = _contextDb.Requests.FirstOrDefault(request => request.Id == requestId);
+            if (requestFirst is null)
             {
                 throw new NotFoundException($"Request with guid {requestId} not found!");
             }
 
-            var thereIsAcceptedRequest = _contextDb.Requests
-                .Any(acceptedRequest => (acceptedRequest.DateTime.Date == request.DateTime.Date ||
-                                            (acceptedRequest.Repeated || request.Repeated) && request.DateTime.DayOfWeek == acceptedRequest.DateTime.DayOfWeek) &&
-                                        acceptedRequest.PairNumber == request.PairNumber &&
-                                        acceptedRequest.Status == Status.Accepted.ToString());
-            if (thereIsAcceptedRequest && accept)
+            var repeatedRequests = _contextDb.Requests.Where(request => request.RepeatId == requestFirst.RepeatId).ToList();
+            if (accept)
             {
-                throw new BadRequestException("There is a confirmed application!");
+                foreach (var repeatedRequest in repeatedRequests)
+                {
+                    var thereIsAcceptedRequest = _contextDb.Requests
+                        .Any(request => request.DateTime.Date == repeatedRequest.DateTime.Date &&
+                                          request.PairNumber == repeatedRequest.PairNumber &&
+                                          request.KeyId == repeatedRequest.KeyId &&
+                                          request.Status == Status.Accepted.ToString());
+
+                    if (thereIsAcceptedRequest)
+                    {
+                        throw new BadRequestException("There is a confirmed application!");
+                    }
+                }
             }
 
-            request.Status = (accept ? Status.Accepted : Status.Rejected).ToString();
+            foreach (var repeatedRequest in repeatedRequests)
+            {
+                repeatedRequest.Status = (accept ? Status.Accepted : Status.Rejected).ToString();
+            }
             _contextDb.SaveChanges();
 
-            // Отменяем заявки студентов в ту же аудиторию на ту же дата-время
-            var pendingRequests = _contextDb.Requests
-                .Include(request => request.User)
-                .Where(pendingRequest => pendingRequest.Status == Status.Pending.ToString() &&
-                                 pendingRequest.PairNumber == request.PairNumber &&
-                                 (pendingRequest.DateTime == request.DateTime ||
-                                      request.Repeated && pendingRequest.DateTime.DayOfWeek == request.DateTime.DayOfWeek) &&
-                                 pendingRequest.User.Role == Role.Student.ToString());
-
-            foreach (Request req in pendingRequests)
+            if (accept)
             {
-                req.Status = Status.Rejected.ToString();
+                foreach (var repeatedRequest in repeatedRequests)
+                {
+                    var pendingRequests = _contextDb.Requests
+                        .Include(request => request.User)
+                        .Where(request => request.DateTime.Date == repeatedRequest.DateTime.Date &&
+                                          request.PairNumber == repeatedRequest.PairNumber &&
+                                          request.Status == Status.Pending.ToString() &&
+                                          request.KeyId == repeatedRequest.KeyId &&
+                                          request.User.Role == Role.Student.ToString())
+                        .ToList();
+
+                    foreach (Request req in pendingRequests)
+                    {
+                        req.Status = Status.Rejected.ToString();
+                    }
+                }
             }
 
             _contextDb.SaveChanges();
-
-            return request.ToRequestDTO();
         }
 
-        public RequestDTO CreateRequest(CreateRequest createRequest, Guid userId, Role userRole)
+        public void CreateRequest(CreateRequest createRequest, Guid userId, Role userRole, bool deanCreate = false) // ++
         {
-            createRequest.DateTime = createRequest.DateTime.Date.ToLocalTime();
-            Status requestStatus = Status.Pending;
-
-            var dublicatRequests = _contextDb.Requests
-                    .Include(request => request.User)
-                    .Any(request => request.KeyId == createRequest.KeyId &&
-                                      request.UserId == userId &&
-                                      request.PairNumber == (short)createRequest.PairNumber &&
-                                      (request.DateTime.Date == createRequest.DateTime.Date ||
-                                          request.Repeated && request.DateTime.DayOfWeek == createRequest.DateTime.DayOfWeek));
-            if (dublicatRequests)
+            if (createRequest.RepeatCount < 1 || 10 < createRequest.RepeatCount)
             {
-                throw new BadRequestException("Such an request already exists!");
+                throw new BadRequestException("RepeatCount from 1 to 10");
             }
+
+            createRequest.DateTime = createRequest.DateTime.Date.ToLocalTime();
+            Status requestStatus = deanCreate ? Status.Accepted : Status.Pending;
 
             if (userRole == Role.Student)
             {
                 var teachersAcceptedRequests = _contextDb.Requests
                     .Include(request => request.User)
                     .Where(request => request.KeyId == createRequest.KeyId &&
-                           (request.DateTime.Date == createRequest.DateTime.Date ||
-                               request.Repeated && request.DateTime.DayOfWeek == createRequest.DateTime.DayOfWeek) &&
+                           request.DateTime.Date == createRequest.DateTime.Date &&
                            request.PairNumber == (short)createRequest.PairNumber &&
                            request.Status == Status.Accepted.ToString() &&
                            (request.User.Role == Role.Teacher.ToString() || request.User.Role == Role.Dean.ToString()));
 
                 requestStatus = teachersAcceptedRequests.Any() ? Status.Rejected : Status.Pending;
-                createRequest.Repeated = false;
+                createRequest.RepeatCount = 1;
             }
 
             var key = _contextDb.Keys.FirstOrDefault(key => key.Id == createRequest.KeyId) ?? throw new BadRequestException($"Key with guid {createRequest.KeyId} not found");
 
-            var newRequest = new Request()
+            Guid RepeatId = Guid.NewGuid();
+            for (int i = 0; i < createRequest.RepeatCount; i++)
             {
-                Name = key.Room,
-                Status = requestStatus.ToString(),
-                DateTime = createRequest.DateTime,
-                Repeated = createRequest.Repeated,
-                KeyId = createRequest.KeyId,
-                UserId = userId,
-                PairNumber = (short)createRequest.PairNumber,
-                Type = createRequest.TypeBooking.ToString(),
-                Id = Guid.NewGuid()
-            };
+                var newRequest = new Request()
+                {
+                    Name = key.Room,
+                    Status = requestStatus.ToString(),
+                    DateTime = createRequest.DateTime.AddDays(7 * i),
+                    KeyId = createRequest.KeyId,
+                    UserId = userId,
+                    PairNumber = (short)createRequest.PairNumber,
+                    Type = createRequest.TypeBooking.ToString(),
+                    Id = Guid.NewGuid(),
+                    RepeatId = RepeatId
+                };
 
-            _contextDb.Requests.Add(newRequest);
-            if (_contextDb.SaveChanges() != 1)
+                _contextDb.Requests.Add(newRequest);
+            }
+ 
+            if (_contextDb.SaveChanges() != createRequest.RepeatCount)
             {
                 throw new DbUpdateException("Failed to save!");
             }
-
-            return (_contextDb.Requests
-                .Include(request => request.User)
-                .FirstOrDefault(request => request.Id == newRequest.Id) ?? throw new BadRequestException("Not found created request"))
-                .ToRequestDTO(); 
         }
 
-        public TableDTO GetAcceptedRequests(Guid audienceId, DateTime? WeekStart)
+        public TableDTO GetAcceptedRequests(Guid audienceId, DateTime? WeekStart) // ++
         {
             return GetRequests(new RequestsFilter() { Status = Status.Accepted, WeekStart = WeekStart });
         }
 
-        public TableDTO GetUsersRequests(Guid userId, DateTime? WeekStart)
+        public TableDTO GetUsersRequests(Guid userId, DateTime? WeekStart) // ++
         {
             if (WeekStart is null)
             {
@@ -188,23 +193,32 @@ namespace dotNetBackend.Services
 
         public List<Audience> GetFreeAudiences(AudienceFilter audienceFilter)
         {
-            if (audienceFilter.PairNumber == null || audienceFilter.BookingTime == null)
+            if (audienceFilter.PairNumber == null || audienceFilter.BookingTime == null || audienceFilter.RepeatedCount == null)
             {
-                throw new BadRequestException("PairNumber or BookingTime is null!");
+                throw new BadRequestException("PairNumber or BookingTime or RepeatedCount is null!");
             }
 
+            if (audienceFilter.RepeatedCount < 1 || 10 < audienceFilter.RepeatedCount)
+            {
+                throw new BadRequestException("RepeatedCount from 1 to 10");
+            }
+
+            // находится в этом интервале и дни недели равны audienceFilter.BookingTime -- audienceFilter.BookingTime + audienceFilter.RepeatedCount * 7 == audienceFilter.BookingTime.Value.Date
+
+            var leftBorder = audienceFilter.BookingTime.Value.Date;
+            var rightBorder = audienceFilter.BookingTime.Value.Date.AddDays(((int)audienceFilter.RepeatedCount - 1) * 7);
+            var DayOfWeek = audienceFilter.BookingTime.Value.Date.DayOfWeek;
             return _contextDb.Keys
                 .Where(key => !key.Requests.Any(request =>
                     request.Status == Status.Accepted.ToString() &&
                     request.PairNumber == (short)audienceFilter.PairNumber &&
-                    (request.DateTime.Date == audienceFilter.BookingTime.Value.Date ||
-                        request.Repeated && request.DateTime.Date.DayOfWeek == audienceFilter.BookingTime.Value.Date.DayOfWeek)
+                    (leftBorder <= request.DateTime.Date && request.DateTime.Date <= rightBorder && request.DateTime.Date.DayOfWeek == DayOfWeek)
                  ))
                 .Select(key => new Audience() { Name = key.Room, KeyId = key.Id })
                 .ToList();
         }
 
-        public RequestDTO CreatePair(CreatePair createPair)
+        public void CreatePair(CreatePair createPair) // ++
         {
             var userIdTeacher = _contextDb.Users
                 .Any(user => user.Id == createPair.TeacherId &&
@@ -214,14 +228,34 @@ namespace dotNetBackend.Services
                 throw new BadRequestException("User not found or user is not teacher!");
             }
 
-            return CreateRequest(new CreateRequest()
+            CreateRequest(new CreateRequest()
             {
                 DateTime = createPair.DateTime,
                 KeyId = createPair.KeyId,
                 PairNumber = createPair.PairNumber,
-                Repeated = createPair.Repeated,
+                RepeatCount = createPair.RepeatCount,
                 TypeBooking = TypeBooking.Pair
-            }, createPair.TeacherId, Role.Teacher);
+            }, createPair.TeacherId, Role.Teacher, true);
         }
     }
 }
+/*
+ Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2Vhc2Zhc2ZzYXNmckBleGFtcGxlLmNvbSIsInJvbGVzIjpbIlJPTEVfREVBTiJdLCJleHAiOjE3MTgwMTg4MjQsInVzZXJJZCI6IjNmYTg1ZjY0LTU3MTctNDU2Mi1iM2ZjLTJjOTYzZjY2YWZhNiIsImlhdCI6MTcwODAxNTIyNCwianRpIjoiNGFmNDVlZmItZTRiMy00NjJjLWE2NjQtZmQ3OWFkN2QxZTIzIn0._KlW8JMr6O5oK08ZjioqY2kyDk_NJkVfNj6YWFCEW50
+
+{
+  "dateTime": "2024-02-17T08:07:21.201Z",
+  "repeatCount": 1,
+  "typeBooking": "Booking",
+  "pairNumber": 0,
+  "keyId": "1806dab8-e3bd-42b5-969c-d6c0f01662c8"
+}
+
+{
+  "dateTime": "2024-02-17T08:58:47.382Z",
+  "repeatCount": 2,
+  "pairNumber": 0,
+  "teacherId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "keyId": "1806dab8-e3bd-42b5-969c-d6c0f01662c8"
+}
+ 
+ */

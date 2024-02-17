@@ -58,6 +58,7 @@ public partial class NewContext : DbContext
                 .HasMaxLength(255)
                 .HasColumnName("name");
             entity.Property(e => e.PairNumber).HasColumnName("pair_number");
+            entity.Property(e => e.RepeatId).HasColumnName("repeat_id");
             entity.Property(e => e.Repeated).HasColumnName("repeated");
             entity.Property(e => e.Status)
                 .HasMaxLength(255)

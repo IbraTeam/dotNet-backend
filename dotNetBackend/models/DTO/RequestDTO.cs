@@ -15,7 +15,7 @@ namespace dotNetBackend.models.DTO
                 return (int)DateTime.DayOfWeek - 1;
             }
         }
-        public bool Repeated { get; set; }
+        //public bool Repeated { get; set; }
         public string TypeBooking { get; set; } = null!;
         public short PairNumber { get; set; }
         public Guid? KeyId { get; set; }
@@ -33,7 +33,7 @@ namespace dotNetBackend.models.DTO
                 DateTime = request.DateTime,
                 Status = request.Status,
                 PairNumber = request.PairNumber,
-                Repeated = request.Repeated,
+                //Repeated = request.Repeated,
                 TypeBooking = request.Type,
                 KeyId = request.KeyId,
                 User = request.User == null ? null : new UserDTO()
@@ -54,7 +54,7 @@ namespace dotNetBackend.models.DTO
                 Name = request.Name,
                 Status = request.Status.ToString(),
                 DateTime = request.DateTime,
-                Repeated = request.Repeated,
+                //Repeated = request.Repeated,
                 KeyId = request.KeyId,
                 PairNumber = request.PairNumber,
                 TypeBooking = request.Type,

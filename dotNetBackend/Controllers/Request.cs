@@ -21,7 +21,7 @@ namespace dotNetBackend.Controllers
             _newContext = newContext;
         }
 
-        [HttpGet("users")] // Получение списка заявок пользователя (со всеми статусами) - /api/request/users 
+        [HttpGet("user")] // Получение списка заявок пользователя (со всеми статусами) - /api/request/users 
         [CustomAuthorize(UserRole = "Student")]
         public TableDTO GetUsersRequests([FromQuery] DateTime? WeekStart)
         {
@@ -32,12 +32,12 @@ namespace dotNetBackend.Controllers
 
         [HttpPost("create")]  // Создание заявки - /api/request/create 
         [CustomAuthorize(UserRole = "Student")]
-        public RequestDTO CreatRequest([FromBody] CreateRequest createRequest) 
+        public void CreatRequest([FromBody] CreateRequest createRequest) 
         {
             Guid userId = JWTTokenHelper.GetUserIdFromToken(HttpContext);
             Role userRole = JWTTokenHelper.GetHeighstRoleFromToken(HttpContext);
 
-            return _requestService.CreateRequest(createRequest, userId, userRole);
+            _requestService.CreateRequest(createRequest, userId, userRole);
         }
 
         [HttpGet] // Получение всех заявок с фильтрацией и пагинацией(для деканата): /api/request 
@@ -48,7 +48,7 @@ namespace dotNetBackend.Controllers
         }
 
         [HttpDelete("{requestId}")] // Отмена заявки: /api/request/:requestId(delete) 
-        [CustomAuthorize(UserRole = "Student")]
+        //[CustomAuthorize(UserRole = "Student")]
         public ResponseDTO CancelRequest([FromRoute] Guid requestId)
         {
             Guid userId = JWTTokenHelper.GetUserIdFromToken(HttpContext);
@@ -64,9 +64,9 @@ namespace dotNetBackend.Controllers
 
         [HttpPost("{requestId}")] // Подтверждение/отклонение заявки (для деканата): /api/request/:requestId (post) 
         [CustomAuthorize(UserRole = "Dean")]
-        public RequestDTO AcceptOrCancelRequest([FromRoute] Guid requestId, [FromBody] bool accept)
+        public void AcceptOrCancelRequest([FromRoute] Guid requestId, [FromBody] bool accept)
         {
-            return _requestService.AcceptOrCancelRequest(requestId, accept);
+            _requestService.AcceptOrCancelRequest(requestId, accept);
         }
 
         [HttpGet("approved/{audienceId}")] // Получение подтвержденных заявок /api/request/approved/:audienceId
@@ -85,9 +85,9 @@ namespace dotNetBackend.Controllers
 
         [HttpPost("createPair")]
         [CustomAuthorize(UserRole = "Dean")]
-        public RequestDTO CreatePair([FromBody] CreatePair createPair)
+        public void CreatePair([FromBody] CreatePair createPair)
         {
-            return _requestService.CreatePair(createPair);
+            _requestService.CreatePair(createPair);
         }
 
         [HttpGet("test")]

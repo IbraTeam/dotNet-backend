@@ -6,5 +6,6 @@ namespace dotNetBackend.models.DTO
     {
         public DateTime? BookingTime { get; set; }
         public PairNumber? PairNumber { get; set; }
+        public int? RepeatedCount { get; set; } 
     }
 }

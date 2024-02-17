@@ -2,7 +2,7 @@
 
 namespace dotNetBackend.models.DTO
 {
-    public class RequestsFilter
+    public class RequestsFilter 
     {
         public DateTime? WeekStart { set; get; }
         public Status? Status { set; get; }
