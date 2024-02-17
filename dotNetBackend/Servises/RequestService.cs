@@ -222,7 +222,8 @@ namespace dotNetBackend.Services
         {
             var userIdTeacher = _contextDb.Users
                 .Any(user => user.Id == createPair.TeacherId &&
-                     (user.Role == "Teacher" || user.Role == "Dean" || user.Role == "Admin"));
+                     (user.Role == "Teacher" || user.Role == "Dean" || user.Role == "Admin" ||
+                      user.Role == "TEACHER" || user.Role == "DEAN" || user.Role == "ADMIN"));
             if (!userIdTeacher)
             {
                 throw new BadRequestException("User not found or user is not teacher!");
