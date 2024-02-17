@@ -48,7 +48,7 @@ namespace dotNetBackend.Controllers
         }
 
         [HttpDelete("{requestId}")] // Отмена заявки: /api/request/:requestId(delete) 
-        //[CustomAuthorize(UserRole = "Student")]
+        [CustomAuthorize(UserRole = "Student")]
         public ResponseDTO CancelRequest([FromRoute] Guid requestId)
         {
             Guid userId = JWTTokenHelper.GetUserIdFromToken(HttpContext);
@@ -69,9 +69,9 @@ namespace dotNetBackend.Controllers
             _requestService.AcceptOrCancelRequest(requestId, accept);
         }
 
-        [HttpGet("approved/{audienceId}")] // Получение подтвержденных заявок /api/request/approved/:audienceId
+        [HttpGet("approved")] // Получение подтвержденных заявок /api/request/approved/:audienceId
         [CustomAuthorize(UserRole = "User")]
-        public TableDTO GetListBooking([FromRoute] Guid audienceId, [FromQuery] DateTime? WeekStart)
+        public TableDTO GetListBooking([FromQuery] Guid? audienceId, [FromQuery] DateTime? WeekStart)
         {
             return _requestService.GetAcceptedRequests(audienceId, WeekStart);
         }
