@@ -4,12 +4,14 @@ using dotNetBackend.models.DbFirst;
 using dotNetBackend.models.DTO;
 using dotNetBackend.models.Enums;
 using dotNetBackend.Servises;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 
 namespace dotNetBackend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [DisableCors]
     public class Request : ControllerBase
     {
         private IRequestService _requestService;
