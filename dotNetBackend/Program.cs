@@ -12,6 +12,20 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var MyAllowSpecificOrigins = "CORS";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+                      policy =>
+                      {
+                          policy
+                           .AllowAnyOrigin()
+                           .AllowAnyHeader()
+                           .AllowAnyMethod();
+                      });
+});
+
+
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
@@ -80,6 +94,8 @@ var app = builder.Build();
     app.UseSwagger();
     app.UseSwaggerUI();
 //}
+
+app.UseCors();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 

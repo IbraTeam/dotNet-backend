@@ -11,7 +11,7 @@ namespace dotNetBackend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [DisableCors]
+    [EnableCors("CORS")]
     public class Request : ControllerBase
     {
         private IRequestService _requestService;
