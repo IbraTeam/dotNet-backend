@@ -1,4 +1,5 @@
 ﻿using dotNetBackend.models.DbFirst;
+using dotNetBackend.models.Enums;
 
 namespace dotNetBackend.models.DTO
 {
@@ -18,7 +19,7 @@ namespace dotNetBackend.models.DTO
         }
         //public bool Repeated { get; set; }
         public string TypeBooking { get; set; } = null!;
-        public short PairNumber { get; set; }
+        public PairNumber PairNumber { get; set; }
         public Guid? KeyId { get; set; }
         public UserDTO? User { get; set; } = null!;
     }
@@ -34,7 +35,7 @@ namespace dotNetBackend.models.DTO
                 PairName = request.Name,
                 DateTime = request.DateTime,
                 Status = request.Status,
-                PairNumber = request.PairNumber,
+                PairNumber = (PairNumber)request.PairNumber,
                 //Repeated = request.Repeated,
                 TypeBooking = request.Type,
                 KeyId = request.KeyId,
@@ -59,7 +60,7 @@ namespace dotNetBackend.models.DTO
                 DateTime = request.DateTime,
                 //Repeated = request.Repeated,
                 KeyId = request.KeyId,
-                PairNumber = request.PairNumber,
+                PairNumber = (PairNumber)request.PairNumber,
                 TypeBooking = request.Type,
                 User = request.User == null ? null : new UserDTO()
                 {
