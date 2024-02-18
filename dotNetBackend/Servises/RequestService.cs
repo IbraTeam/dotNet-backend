@@ -35,10 +35,12 @@ namespace dotNetBackend.Services
                 requestsFilter.WeekStart = DateTime.Now.AddDays(1 - (int)DateTime.Now.DayOfWeek);
             }
 
+            string[] statuses = requestsFilter.Status.Select(status => status.ToString()).ToArray();
+
             var temp = _contextDb.Requests
                 .Include(request => request.User)
                 .Include(request => request.Key)
-                .Where(request => (requestsFilter.Status != null ? request.Status == requestsFilter.Status.ToString() : true) &&
+                .Where(request => (requestsFilter.Status != null ? statuses.Contains(request.Status) : true) &&
                                   (requestsFilter.PairNumber != null ? request.PairNumber == (short)requestsFilter.PairNumber : true) &&
                                   (requestsFilter.Type != null ? request.Type == requestsFilter.Type.ToString() : true) &&
                                   (requestsFilter.AudienceId != null ? request.KeyId == requestsFilter.AudienceId : true));
@@ -169,7 +171,7 @@ namespace dotNetBackend.Services
 
         public TableDTO GetAcceptedRequests(Guid? audienceId, DateTime? WeekStart) // ++
         {
-            return GetRequests(new RequestsFilter() { Status = Status.Accepted, WeekStart = WeekStart, AudienceId = audienceId });
+            return GetRequests(new RequestsFilter() { Status = [Status.Accepted], WeekStart = WeekStart, AudienceId = audienceId });
         }
 
         public TableDTO GetUsersRequests(Guid userId, DateTime? WeekStart) // ++
