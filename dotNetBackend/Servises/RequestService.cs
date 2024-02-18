@@ -35,7 +35,7 @@ namespace dotNetBackend.Services
                 requestsFilter.WeekStart = DateTime.Now.AddDays(1 - (int)DateTime.Now.DayOfWeek);
             }
 
-            string[] statuses = requestsFilter.Status.Select(status => status.ToString()).ToArray();
+            string[] statuses = (requestsFilter.Status ?? []).Select(status => status.ToString()).ToArray();
 
             var temp = _contextDb.Requests
                 .Include(request => request.User)
