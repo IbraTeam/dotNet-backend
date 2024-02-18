@@ -6,7 +6,7 @@ public partial class Request
     public DateTime DateTime { get; set; }
     public string Name { get; set; } = null!;
     public short PairNumber { get; set; }
-    public bool Repeated { get; set; } = false;
+    //public bool Repeated { get; set; } = false;
     public int RepeatedCount { get; set; } = 0;
     public Guid RepeatId { get; set; }
     public string Type { get; set; } = null!;
