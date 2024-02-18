@@ -66,7 +66,7 @@ namespace dotNetBackend.Controllers
 
         [HttpPost("{requestId}")] // Подтверждение/отклонение заявки (для деканата): /api/request/:requestId (post) 
         [CustomAuthorize(UserRole = "Dean")]
-        public void AcceptOrCancelRequest([FromRoute] Guid requestId, [FromBody] bool accept)
+        public void AcceptOrCancelRequest([FromRoute] Guid requestId, [FromBody] AcceptDTO accept)
         {
             _requestService.AcceptOrCancelRequest(requestId, accept);
         }

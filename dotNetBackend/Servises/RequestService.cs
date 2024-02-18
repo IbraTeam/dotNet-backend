@@ -63,7 +63,7 @@ namespace dotNetBackend.Services
             };
         }
 
-        public void AcceptOrCancelRequest(Guid requestId, bool accept) // ++
+        public void AcceptOrCancelRequest(Guid requestId, AcceptDTO acceptDTO) // ++
         {
             var requestFirst = _contextDb.Requests.FirstOrDefault(request => request.Id == requestId);
             if (requestFirst is null)
@@ -72,7 +72,7 @@ namespace dotNetBackend.Services
             }
 
             var repeatedRequests = _contextDb.Requests.Where(request => request.RepeatId == requestFirst.RepeatId).ToList();
-            if (accept)
+            if (acceptDTO.Accept)
             {
                 foreach (var repeatedRequest in repeatedRequests)
                 {
@@ -91,11 +91,11 @@ namespace dotNetBackend.Services
 
             foreach (var repeatedRequest in repeatedRequests)
             {
-                repeatedRequest.Status = (accept ? Status.Accepted : Status.Rejected).ToString();
+                repeatedRequest.Status = (acceptDTO.Accept ? Status.Accepted : Status.Rejected).ToString();
             }
             _contextDb.SaveChanges();
 
-            if (accept)
+            if (acceptDTO.Accept)
             {
                 foreach (var repeatedRequest in repeatedRequests)
                 {

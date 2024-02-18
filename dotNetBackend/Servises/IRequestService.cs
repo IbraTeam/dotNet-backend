@@ -9,7 +9,7 @@ namespace dotNetBackend.Servises
         void CreateRequest(CreateRequest createRequest, Guid userId, Role userRole, bool deanCreate = false); // Создание заявки - /api/request/creat
         TableDTO GetRequests(RequestsFilter requestsFilter); // Получение всех заявок с фильтрацией и пагинацией(для деканата) : /api/request
         void CancelRequest(Guid requestId, Guid userId); // Отмена заявки: /api/request/:requestId  (delete)
-        void AcceptOrCancelRequest(Guid requestId, bool accept); // Подтверждение/отклонение заявки (для деканата): /api/request/:requestId (post)
+        void AcceptOrCancelRequest(Guid requestId, AcceptDTO accept); // Подтверждение/отклонение заявки (для деканата): /api/request/:requestId (post)
         TableDTO GetAcceptedRequests(Guid? audienceId, DateTime? WeekStart); // Получение бронирований аудитории (передаем id аудитории) /api/request/:audienceId
         List<Audience> GetFreeAudiences(AudienceFilter audienceFilter);
         void CreatePair(CreatePair createPair);
