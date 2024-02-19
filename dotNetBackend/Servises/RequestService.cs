@@ -71,16 +71,19 @@ namespace dotNetBackend.Services
                 throw new NotFoundException($"Request with guid {requestId} not found!");
             }
 
-            var repeatedRequests = _contextDb.Requests.Where(request => request.RepeatId == requestFirst.RepeatId).ToList();
+            var repeatedRequests = _contextDb.Requests.Include(request => request.User).Where(request => request.RepeatId == requestFirst.RepeatId).ToList();
             if (acceptDTO.Accept)
             {
                 foreach (var repeatedRequest in repeatedRequests)
                 {
                     var thereIsAcceptedRequest = _contextDb.Requests
+                        .Include(request => request.User)
                         .Any(request => request.DateTime.Date == repeatedRequest.DateTime.Date &&
                                           request.PairNumber == repeatedRequest.PairNumber &&
                                           request.KeyId == repeatedRequest.KeyId &&
-                                          request.Status == Status.Accepted.ToString());
+                                          request.Status == Status.Accepted.ToString() &&
+                                          ((repeatedRequest.User.Role == "TEACHER" || repeatedRequest.User.Role == "DEAN" || repeatedRequest.User.Role == "ADMIN") && acceptDTO.Accept ? 
+                                                    request.User.Role == "TEACHER" || request.User.Role == "DEAN" || request.User.Role == "ADMIN" : true));
 
                     if (thereIsAcceptedRequest)
                     {
@@ -103,7 +106,7 @@ namespace dotNetBackend.Services
                         .Include(request => request.User)
                         .Where(request => request.DateTime.Date == repeatedRequest.DateTime.Date &&
                                           request.PairNumber == repeatedRequest.PairNumber &&
-                                          request.Status == Status.Pending.ToString() &&
+                                          // request.Status == Status.Pending.ToString() &&
                                           request.KeyId == repeatedRequest.KeyId &&
                                           request.User.Role == Role.Student.ToString())
                         .ToList();
@@ -126,7 +129,7 @@ namespace dotNetBackend.Services
             }
 
             createRequest.DateTime = createRequest.DateTime.Date.ToLocalTime();
-            Status requestStatus = deanCreate ? Status.Accepted : Status.Pending;
+            Status requestStatus = Status.Pending; //deanCreate ? Status.Accepted : Status.Pending;
 
             if (userRole == Role.Student)
             {
@@ -167,6 +170,12 @@ namespace dotNetBackend.Services
             {
                 throw new DbUpdateException("Failed to save!");
             }
+            
+            if (deanCreate)
+            {
+                var requestId = (_contextDb.Requests.FirstOrDefault(request => request.RepeatId == RepeatId) ?? throw new BadRequestException("Ошибка при подтверждении пары, созданной деканатом!")).Id ;
+                AcceptOrCancelRequest(requestId, new() { Accept = true });
+            }
         }
 
         public TableDTO GetAcceptedRequests(Guid? audienceId, DateTime? WeekStart) // ++
@@ -196,7 +205,7 @@ namespace dotNetBackend.Services
             };
         }
 
-        public List<Audience> GetFreeAudiences(AudienceFilter audienceFilter)
+        public List<Audience> GetFreeAudiences(AudienceFilter audienceFilter, Role userRole)
         {
             if (audienceFilter.PairNumber == null || audienceFilter.BookingTime == null || audienceFilter.RepeatedCount == null)
             {
@@ -215,6 +224,7 @@ namespace dotNetBackend.Services
             var DayOfWeek = audienceFilter.BookingTime.Value.Date.DayOfWeek;
             return _contextDb.Keys
                 .Where(key => !key.Requests.Any(request =>
+                    (userRole == Role.Teacher || userRole == Role.Dean || userRole == Role.Admin ? request.User.Role == "TEACHER" || request.User.Role == "DEAN" || request.User.Role == "ADMIN" : true) &&
                     request.Status == Status.Accepted.ToString() &&
                     request.PairNumber == (short)audienceFilter.PairNumber &&
                     (leftBorder <= request.DateTime.Date && request.DateTime.Date <= rightBorder && request.DateTime.Date.DayOfWeek == DayOfWeek)

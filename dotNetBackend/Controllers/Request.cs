@@ -82,7 +82,9 @@ namespace dotNetBackend.Controllers
         [CustomAuthorize(UserRole = "Student")]
         public List<Audience> GetListAudience([FromQuery] AudienceFilter audienceFilter)
         {
-            return _requestService.GetFreeAudiences(audienceFilter);
+            Role userRole = JWTTokenHelper.GetHeighstRoleFromToken(HttpContext);
+
+            return _requestService.GetFreeAudiences(audienceFilter, userRole);
         }
 
         [HttpPost("createPair")]
