@@ -101,7 +101,7 @@ namespace dotNetBackend.Services
             }
             _contextDb.SaveChanges();
 
-            Console.WriteLine("--- " + acceptDTO.Accept + " - " + repeatedRequests.Count);
+            //Console.WriteLine("--- " + acceptDTO.Accept + " - " + repeatedRequests.Count);
             if (acceptDTO.Accept)
             {
                 foreach (var repeatedRequest in repeatedRequests)
@@ -112,13 +112,13 @@ namespace dotNetBackend.Services
                                           request.PairNumber == repeatedRequest.PairNumber &&
                                           // request.Status == Status.Pending.ToString() &&
                                           request.KeyId == repeatedRequest.KeyId &&
-                                          request.User.Role == Role.Student.ToString());
+                                          request.User.Role == "STUDENT");
 
-                    Console.WriteLine("--------- " + repeatedRequest.Name);
+                    //Console.WriteLine("--------- " + repeatedRequest.Name);
                     foreach (Request req in pendingRequests)
-                    {
+                    { 
                         req.Status = Status.Rejected.ToString();
-                        Console.WriteLine("------------- " + req.Id + " " + req.User.Name);
+                        //Console.WriteLine("------------- " + req.Id + " " + req.User.Name);
                     }
 
                     _contextDb.SaveChanges();
@@ -159,7 +159,7 @@ namespace dotNetBackend.Services
                            request.DateTime.Date == createRequest.DateTime.Date &&
                            request.PairNumber == (short)createRequest.PairNumber &&
                            request.Status == Status.Accepted.ToString() &&
-                           (request.User.Role == Role.Teacher.ToString() || request.User.Role == Role.Dean.ToString()));
+                           (request.User.Role == "DEAN" || request.User.Role == "TEACHER"));
 
                 requestStatus = teachersAcceptedRequests.Any() ? Status.Rejected : Status.Pending;
                 createRequest.RepeatCount = 1;
