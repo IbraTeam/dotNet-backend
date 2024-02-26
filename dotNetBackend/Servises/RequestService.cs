@@ -111,6 +111,7 @@ namespace dotNetBackend.Services
                         .Where(request => request.DateTime.Date == repeatedRequest.DateTime.Date &&
                                           request.PairNumber == repeatedRequest.PairNumber &&
                                           // request.Status == Status.Pending.ToString() &&
+                                          request.Id != repeatedRequest.Id &&
                                           request.KeyId == repeatedRequest.KeyId &&
                                           request.User.Role == "STUDENT");
 
