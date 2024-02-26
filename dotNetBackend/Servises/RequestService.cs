@@ -101,6 +101,7 @@ namespace dotNetBackend.Services
             }
             _contextDb.SaveChanges();
 
+            Console.WriteLine("--- " + acceptDTO.Accept + " - " + repeatedRequests.Count);
             if (acceptDTO.Accept)
             {
                 foreach (var repeatedRequest in repeatedRequests)
@@ -113,10 +114,11 @@ namespace dotNetBackend.Services
                                           request.KeyId == repeatedRequest.KeyId &&
                                           request.User.Role == Role.Student.ToString());
 
+                    Console.WriteLine("--------- " + repeatedRequest.Name);
                     foreach (Request req in pendingRequests)
                     {
                         req.Status = Status.Rejected.ToString();
-                        Console.WriteLine(req.Id + " " + req.User.Name);
+                        Console.WriteLine("------------- " + req.Id + " " + req.User.Name);
                     }
 
                     _contextDb.SaveChanges();
