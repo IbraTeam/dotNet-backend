@@ -71,6 +71,9 @@ namespace dotNetBackend.Services
                 throw new NotFoundException($"Request with guid {requestId} not found!");
             }
 
+            // Если подтверждаем препода и есть подтвержденая от другого препода, то 400
+            // Если подтверждаем препода и есть подтвержденая от студента, то подтверждаем препода и отклоняем студента
+            // Если подтверждаем студента и есть подтвержденая, то 400
             var repeatedRequests = _contextDb.Requests.Include(request => request.User).Where(request => request.RepeatId == requestFirst.RepeatId).ToList();
             if (acceptDTO.Accept)
             {
@@ -108,8 +111,7 @@ namespace dotNetBackend.Services
                                           request.PairNumber == repeatedRequest.PairNumber &&
                                           // request.Status == Status.Pending.ToString() &&
                                           request.KeyId == repeatedRequest.KeyId &&
-                                          request.User.Role == Role.Student.ToString())
-                        .ToList();
+                                          request.User.Role == Role.Student.ToString());
 
                     foreach (Request req in pendingRequests)
                     {
@@ -117,7 +119,6 @@ namespace dotNetBackend.Services
                     }
                 }
             }
-
             _contextDb.SaveChanges();
         }
 
@@ -131,6 +132,21 @@ namespace dotNetBackend.Services
             createRequest.DateTime = createRequest.DateTime.Date.ToLocalTime();
             Status requestStatus = Status.Pending; //deanCreate ? Status.Accepted : Status.Pending;
 
+            // Проверка что нет дубликата или нет пересечений со своими заявками на других неделях 
+            var leftBorder = createRequest.DateTime.Date;
+            var rightBorder = createRequest.DateTime.Date.AddDays(((int)createRequest.RepeatCount - 1) * 7);
+            var DayOfWeek = createRequest.DateTime.Date.DayOfWeek;
+            var thereAreDublicate = _contextDb.Requests
+                .Any(request => request.KeyId == createRequest.KeyId &&
+                                (leftBorder <= request.DateTime.Date && request.DateTime.Date <= rightBorder && request.DateTime.Date.DayOfWeek == DayOfWeek) &&
+                                request.PairNumber == (short)createRequest.PairNumber &&
+                                request.UserId == userId);
+            if (thereAreDublicate)
+            {
+                throw new BadRequestException("You already have a request at this time for the current day or for the same day of the week next week!");
+            }
+
+            // Если мы под студентом и есть подтвержденная заявка препода, то ее сразу отклоняем 
             if (userRole == Role.Student)
             {
                 var teachersAcceptedRequests = _contextDb.Requests
