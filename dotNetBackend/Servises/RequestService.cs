@@ -13,7 +13,7 @@ namespace dotNetBackend.Services
 
         public RequestService(NewContext contextDb)
         {
-            _contextDb = contextDb;
+            _contextDb = contextDb; 
         }
 
         public void CancelRequest(Guid requestId, Guid userId) // ++
@@ -52,7 +52,7 @@ namespace dotNetBackend.Services
                 throw new BadRequestException("The week should start on Monday!");
             }
 
-            temp = temp.Where(request => requestsFilter.WeekStart < request.DateTime &&
+            temp = temp.Where(request => requestsFilter.WeekStart <= request.DateTime &&
                               request.DateTime < requestsFilter.WeekStart + new TimeSpan(7, 0, 0, 0));
 
             return new TableDTO()
