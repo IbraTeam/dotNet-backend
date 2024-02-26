@@ -33,10 +33,13 @@ namespace dotNetBackend.Controllers
         }
 
         [HttpPost("create")]  // Создание заявки - /api/request/create 
-       // [CustomAuthorize(UserRole = "Student")]
-        public void CreatRequest( [FromBody]IFormFile f) 
+        [CustomAuthorize(UserRole = "Student")]
+        public void CreateRequest([FromBody] CreateRequest createRequest)
         {
-           
+            Guid userId = JWTTokenHelper.GetUserIdFromToken(HttpContext);
+            Role userRole = JWTTokenHelper.GetHeighstRoleFromToken(HttpContext);
+
+            _requestService.CreateRequest(createRequest, userId, userRole);
         }
 
         [HttpGet] // Получение всех заявок с фильтрацией и пагинацией(для деканата): /api/request 
