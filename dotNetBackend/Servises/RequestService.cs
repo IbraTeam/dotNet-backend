@@ -116,10 +116,12 @@ namespace dotNetBackend.Services
                     foreach (Request req in pendingRequests)
                     {
                         req.Status = Status.Rejected.ToString();
+                        Console.WriteLine(req.Id + " " + req.User.Name);
                     }
+
+                    _contextDb.SaveChanges();
                 }
             }
-            _contextDb.SaveChanges();
         }
 
         public void CreateRequest(CreateRequest createRequest, Guid userId, Role userRole, bool deanCreate = false) // ++
